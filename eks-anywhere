@@ -1,0 +1,215 @@
+#!/bin/bash
+# eks.sh
+# Copyright (c) 2023 Steven Agustinus <steven87.ags@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# File              : eks.sh
+# License           : MIT
+# Author            : Steven Agustinus <steven87.ags@gmail.com>
+# Date              : 17.01.2023
+# Last Modified Date: 17.01.2023
+# Last Modified By  : Steven Agustinus <steven87.ags@gmail.com>
+
+echo -e """
+\e[91m⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢ \e[0m
+\e[94m
+███████╗██╗  ██╗███████╗
+██╔════╝██║ ██╔╝██╔════╝
+█████╗  █████╔╝ ███████╗
+██╔══╝  ██╔═██╗ ╚════██║
+███████╗██║  ██╗███████║
+╚══════╝╚═╝  ╚═╝╚══════╝
+
+ █████╗ ███╗   ██╗██╗   ██╗██╗    ██╗██╗  ██╗███████╗██████╗ ███████╗
+██╔══██╗████╗  ██║╚██╗ ██╔╝██║    ██║██║  ██║██╔════╝██╔══██╗██╔════╝
+███████║██╔██╗ ██║ ╚████╔╝ ██║ █╗ ██║███████║█████╗  ██████╔╝█████╗  
+██╔══██║██║╚██╗██║  ╚██╔╝  ██║███╗██║██╔══██║██╔══╝  ██╔══██╗██╔══╝  
+██║  ██║██║ ╚████║   ██║   ╚███╔███╔╝██║  ██║███████╗██║  ██║███████╗
+╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝
+\e[0m
+\e[91m⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢    \e[0m
+
+"""
+
+echo -e "Installing Prerequisite.. \n"
+
+#installing docker function 
+
+function DOCKER(){
+    
+    echo -e "docker Installation \n"
+    sleep 1
+
+    yum install -y yum-utils
+
+    yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+
+    sleep 1
+
+    yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+    echo -e "\n"
+    echo -e "Installation finish, start docker service.. \n"
+    sleep 1
+
+    systemctl enable --now docker
+}
+
+#installing kubectl
+
+function KUBECTL(){
+echo -e "Installing kubectl.. \n"
+sleep 1
+
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+yum install -y kubectl
+
+echo -e "kubectl installed..!! \n"
+sleep 1
+}
+
+####################### installing eksctl & eksctl-anywhere ##########################
+
+#eksctl
+function EKSCTL(){
+echo -e "start installing eksctl..\n"
+sleep 1
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+
+echo -e "eksctl installed..!! \n"
+sleep 1
+}
+
+#eksctl-anywhere 
+function EKSCTLANY(){
+    export EKSA_RELEASE="0.13.1" OS="$(uname -s | tr A-Z a-z)" RELEASE_NUMBER=26
+    curl "https://anywhere-assets.eks.amazonaws.com/releases/eks-a/${RELEASE_NUMBER}/artifacts/eks-a/v${EKSA_RELEASE}/${OS}/amd64/eksctl-anywhere-v${EKSA_RELEASE}-${OS}-amd64.tar.gz" \
+    --silent --location \
+    | tar xz ./eksctl-anywhere
+    mv ./eksctl-anywhere /usr/local/bin/
+    sleep 1
+    echo -e "\n"
+    eksctl anywhere version
+
+}
+
+
+######################### -end- ###################################
+
+#run the function for prerequisite needed
+
+#DOCKER
+#sleep 1
+#KUBECTL
+#sleep 1
+#EKSCTL
+#sleep 1
+#EKSCTLANY
+
+#end function 
+
+
+######################## Get Started with Amazon EKS Anywhere #####################
+
+echo "Generate a cluster config and create a cluster."
+echo -e "Input Cluster Name You want to create. (ex:TEST-CLUSTER) \n"
+
+read -p "Cluster Name :" CLUSTER
+echo -e "\n"
+
+CLUSTER_NAME=$CLUSTER
+
+echo -e "CLUSTER_NAME=${CLUSTER_NAME} \n"
+
+eksctl anywhere generate clusterconfig $CLUSTER_NAME \
+    --provider docker > $CLUSTER_NAME.yaml
+
+eksctl anywhere create cluster -f $CLUSTER_NAME.yaml
+
+export KUBECONFIG=${PWD}/${CLUSTER_NAME}/${CLUSTER_NAME}-eks-a-cluster.kubeconfig
+
+kubectl get ns
+
+echo -e "\n"
+echo -e "start create a simple test application for verify your cluster is working properly. \n"
+kubectl apply -f "https://anywhere.eks.amazonaws.com/manifests/hello-eks-a.yaml"
+kubectl get pods -l app=hello-eks-a
+
+############################ end #################################################
+
+echo -e "Now Please type this command below : "
+echo -e """
+#======================================================#
+#   $ kubectl port-forward deploy/hello-eks-a 8000:80  #
+#======================================================#
+        """
+echo -e """
+Open new terminal and type this command in new terminal :
+#======================================================#
+#   $ curl localhost:8080                              #
+#======================================================#
+        """
+echo -e """
+If succeed in your new terminal will have output like this : \n
+
+⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢
+
+Thank you for using
+
+███████╗██╗  ██╗███████╗
+██╔════╝██║ ██╔╝██╔════╝
+█████╗  █████╔╝ ███████╗
+██╔══╝  ██╔═██╗ ╚════██║
+███████╗██║  ██╗███████║
+╚══════╝╚═╝  ╚═╝╚══════╝
+
+ █████╗ ███╗   ██╗██╗   ██╗██╗    ██╗██╗  ██╗███████╗██████╗ ███████╗
+██╔══██╗████╗  ██║╚██╗ ██╔╝██║    ██║██║  ██║██╔════╝██╔══██╗██╔════╝
+███████║██╔██╗ ██║ ╚████╔╝ ██║ █╗ ██║███████║█████╗  ██████╔╝█████╗  
+██╔══██║██║╚██╗██║  ╚██╔╝  ██║███╗██║██╔══██║██╔══╝  ██╔══██╗██╔══╝  
+██║  ██║██║ ╚████║   ██║   ╚███╔███╔╝██║  ██║███████╗██║  ██║███████╗
+╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝
+
+You have successfully deployed the hello-eks-a pod hello-eks-a-c5b9bc9d8-qp6bg
+
+For more information check out
+https://anywhere.eks.amazonaws.com
+
+⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢
+
+"""
+
+
+
+
+
+
+
