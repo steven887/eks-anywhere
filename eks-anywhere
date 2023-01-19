@@ -165,6 +165,8 @@ kubectl get pods -l app=hello-eks-a
 
 ############################ end #################################################
 
+cp  ${PWD}/${CLUSTER_NAME}/${CLUSTER_NAME}-eks-a-cluster.kubeconfig ${PWD}/.kube/config
+
 echo -e "Now Please type this command below : "
 echo -e """
 #======================================================#
